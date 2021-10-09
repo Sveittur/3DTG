@@ -1,5 +1,6 @@
-attribute vec3 a_position;
 attribute vec3 a_normal;
+attribute vec3 a_position;
+
 
 uniform mat4 u_model_matrix;
 uniform mat4 u_projection_matrix;
@@ -17,6 +18,7 @@ void main(void)
 
 	position = u_model_matrix * position;
 	normal = u_model_matrix * normal;
+
 
 	float light_factor_1 = max(dot(normalize(normal), normalize(vec4(1, 2, 3, 0))), 0.0);
 	float light_factor_2 = max(dot(normalize(normal), normalize(vec4(-3, -2, -1, 0))), 0.0);

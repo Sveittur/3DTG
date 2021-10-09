@@ -1,7 +1,10 @@
 
+from os import X_OK
 import random
 from random import *
-
+from sys import _xoptions
+import numpy as np
+import pywavefront
 try:
     try:
         from OpenGL.GL import * # this fails in <=2020 versions of Python on OS X 11.x
@@ -122,7 +125,6 @@ class Cube:
         shader.set_normal_attribute(self.normal_array)
 
     def draw(self, shader):
-        
         shader.set_position_attribute(self.position_array)
         shader.set_normal_attribute(self.normal_array)
         
@@ -132,3 +134,162 @@ class Cube:
         glDrawArrays(GL_TRIANGLE_FAN, 12, 4)
         glDrawArrays(GL_TRIANGLE_FAN, 16, 4)
         glDrawArrays(GL_TRIANGLE_FAN, 20, 4)
+
+class Coin:
+    def __init__(self, pos,norm):
+        self.position_array = [y for x in pos for y in x]
+        self.normal_array = [y for x in norm for y in x]
+
+
+    def draw(self, shader):
+        print(self.position_array)
+        shader.set_position_attribute(self.position_array)
+        shader.set_normal_attribute(self.normal_array)
+
+        for i in range(0,len(self.position_array),3):
+            glDrawArrays(GL_TRIANGLES,i,3)
+        
+            
+       
+
+        
+        
+
+        
+
+class MeshModel:
+    def __init__(self):
+        self.vertex_arrays = dict()
+        # self.index_arrays = dict()
+        self.mesh_materials = dict()
+        self.materials = dict()
+        self.vertex_counts = dict()
+        self.vertex_buffer_ids = dict()
+
+    def add_vertex(self, mesh_id, position, normal, uv = None):
+        if mesh_id not in self.vertex_arrays:
+            self.vertex_arrays[mesh_id] = []
+            self.vertex_counts[mesh_id] = 0
+        self.vertex_arrays[mesh_id] += [position.x, position.y, position.z, normal.x, normal.y, normal.z]
+        self.vertex_counts[mesh_id] += 1
+
+    def set_mesh_material(self, mesh_id, mat_id):
+        self.mesh_materials[mesh_id] = mat_id
+
+    def add_material(self, mat_id, mat):
+        self.materials[mat_id] = mat
+
+    def set_opengl_buffers(self):
+        for mesh_id in self.mesh_materials.keys():
+            self.vertex_buffer_ids[mesh_id] = glGenBuffers(1)
+            glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer_ids[mesh_id])
+            glBufferData(GL_ARRAY_BUFFER, np.array(self.vertex_arrays[mesh_id], dtype='float32'), GL_STATIC_DRAW)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+
+    def draw(self, shader):
+        print(self.mesh_materials)
+        for mesh_id, mesh_material in self.mesh_materials.items():
+            material = self.materials[mesh_material]
+            shader.set_attribute_buffers(self.vertex_buffer_ids[mesh_id])
+            glDrawArrays(GL_TRIANGLES, 0, self.vertex_counts[mesh_id])
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+
+
+
+class coin():
+    def __init__(self,buffer,indices):
+        self.buffer = buffer
+        self.indicies = indices
+
+    def draw(self,vao,vbo):
+
+        glBindVertexArray(vao[0])
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[0])
+        glBufferData(GL_ARRAY_BUFFER,self.buffer.nbytes,self.buffer,GL_STATIC_DRAW)
+
+        
+        glEnableVertexAttribArray(0)
+        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,self.buffer.itemsize * 8, ctypes.c_void_p(0))
+
+        glEnableVertexAttribArray(1)
+        glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,self.buffer.itemsize * 8, ctypes.c_void_p(20))
+        glDrawArrays(GL_TRIANGLES,0,len(self.indicies))
+
+
+
+class Diamond:
+    def __init__(self):
+        self.position_array = [
+                         -0.5, -0.5, 0.0,
+                          0.5, -0.5, 0.0,
+                          0.0,  0.5, 0.5,
+
+                          -0.5, -0.5, 0.0,
+                          -0.5, -0.5, 1,
+                          0.0,  0.5, 0.5,
+
+                         0.5, -0.5, 0.0,
+                         0.5, -0.5, 1,
+                         0.0,  0.5, 0.5,
+
+                         -0.5, -0.5, 1,
+                          0.5, -0.5, 1,
+                          0.0,  0.5, 0.5,
+
+                          -0.5, -0.5, 0.0,
+                          0.5, -0.5, 0.0,
+                          0.0,  -1, 0.5,
+
+                          -0.5, -0.5, 0.0,
+                          -0.5, -0.5, 1,
+                          0.0,  -1, 0.5,
+
+                          0.5, -0.5, 0.0,
+                         0.5, -0.5, 1,
+                         0.0,  -1, 0.5,
+
+                         -0.5, -0.5, 1,
+                          0.5, -0.5, 1,
+                          0.0,  -1, 0.5,
+
+
+        ]
+        self.normal_array = []
+        for i in range(0,len(self.position_array),9):
+            R = Point(self.position_array[i],self.position_array[i+1],self.position_array[i]+2)
+            Q = Point(self.position_array[i+3],self.position_array[i+4],self.position_array[i]+5)
+            P = Point(self.position_array[i+6],self.position_array[i+7],self.position_array[i]+7)
+            PQ = P-Q
+            PR = P-R
+            N = PQ.cross(PR)
+            self.normal_array.append(N.x)
+            self.normal_array.append(N.y)
+            self.normal_array.append(N.z)
+            self.normal_array.append(N.x)
+            self.normal_array.append(N.y)
+            self.normal_array.append(N.z)
+            self.normal_array.append(N.x)
+            self.normal_array.append(N.y)
+            self.normal_array.append(N.z)
+
+
+    def draw(self, shader):
+        shader.set_position_attribute(self.position_array)
+        shader.set_normal_attribute(self.normal_array)
+        
+        glDrawArrays(GL_TRIANGLES, 0, 3)
+        glDrawArrays(GL_TRIANGLES, 3, 3)
+        glDrawArrays(GL_TRIANGLES, 6, 3)
+        glDrawArrays(GL_TRIANGLES, 9, 3)
+        glDrawArrays(GL_TRIANGLES, 12, 3)
+        glDrawArrays(GL_TRIANGLES, 15, 3)
+        glDrawArrays(GL_TRIANGLES, 18, 3)
+        glDrawArrays(GL_TRIANGLES, 21, 3)
+    
+        
+
+    
+
+
