@@ -15,7 +15,7 @@ try:
 except ImportError:
     pass
 
-# from OpenGL.GLU import *
+from OpenGL.GLU import *
 from math import *
 from OpenGL.GL.ARB import robust_buffer_access_behavior
 from OpenGL.error import NullFunctionError
@@ -39,7 +39,7 @@ class GraphicsProgram3D:
     def __init__(self):
 
         pygame.init() 
-        pygame.display.set_mode((800,600), pygame.OPENGL|pygame.DOUBLEBUF)
+        self.gameDisplay = pygame.display.set_mode((800,600), pygame.OPENGL|pygame.DOUBLEBUF)
 
         self.shader = Shader3D()
         self.shader.use()
@@ -54,22 +54,26 @@ class GraphicsProgram3D:
         #self.projection_matrix.set_orthographic(-2, 2, -2, 2, 0.5, 10)
         self.projection_matrix.set_perspective(pi/2, 800/600, 0.5, 100)
         self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
+        self.blueDiamond = pygame.image.load('objects/redDiamond.png')
+        pygame.display.set_icon(self.blueDiamond)
+        
 
 
 
         self.cube = Cube()
-        self.Obj = ObjLoader()
+        #self.Obj = ObjLoader()
         self.diamond = Diamond()
-        self.Obj.loadModel('objects/coin.obj')
-        self.Obj.model
-        for i in range(len(self.Obj.v)):
-            for j in range(0,3):
-                self.Obj.v[i][j] = float(self.Obj.v[i][j])
+        self.color = Color
+        #self.Obj.loadModel('objects/coin.obj')
+        #self.Obj.model
+        #for i in range(len(self.Obj.v)):
+            #for j in range(0,3):
+                #self.Obj.v[i][j] = float(self.Obj.v[i][j])
 
-        for i in range(len(self.Obj.vn)):
-            for j in range(0,3):
-                self.Obj.vn[i][j] = float(self.Obj.vn[i][j])
-        self.coin = Coin(self.Obj.v,self.Obj.vn)
+        #for i in range(len(self.Obj.vn)):
+            #for j in range(0,3):
+                #self.Obj.vn[i][j] = float(self.Obj.vn[i][j])
+        #self.coin = Coin(self.Obj.v,self.Obj.vn)
 
         
 
@@ -200,6 +204,9 @@ class GraphicsProgram3D:
         
         self.moveVec = Vector(0,0,0)
         self.white_background = False
+
+    def car(self):
+        self.gameDisplay.blit(self.blueDiamond,(400,300))
 
     def update(self):
         delta_time = self.clock.tick() / 1000.0
@@ -406,7 +413,6 @@ class GraphicsProgram3D:
         
 
         
-            
 
 
                 
@@ -417,6 +423,7 @@ class GraphicsProgram3D:
     
 
     def display(self):
+        
         glEnable(GL_DEPTH_TEST)  ### --- NEED THIS FOR NORMAL 3D BUT MANY EFFECTS BETTER WITH glDisable(GL_DEPTH_TEST) ... try it! --- ###
 
         if self.white_background:
@@ -431,12 +438,23 @@ class GraphicsProgram3D:
         self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
         self.shader.set_view_matrix(self.view_matrix.get_matrix())
 
+        self.shader.set_eye_position(self.view_matrix.eye)
+        #self.shader.set_material_specular(Color(1.0,1.0,1.0))
+
+        self.shader.set_light_position(self.view_matrix.eye)
+        self.shader.set_light_diffuse(1.0,1.0,1.0)
+        self.shader.set_light_specular(0.0,0.0,0.0)
+
+        self.shader.set_material_specular(1.0,1.0,1.0)
+        self.shader.set_material_shininess(25)
+
         self.model_matrix.load_identity()
+
         
 
         #BLUE DIAMOND
         if "Blue" not in self.diamonds:
-            self.shader.set_solid_color(0.15,0.01,0.64)
+            self.shader.set_material_diffuse(0.15,0.01,0.64)
             self.model_matrix.push_matrix()
             self.model_matrix.add_translation(-1.7,0,-3.6)
             self.model_matrix.add_scale(0.2,0.2,0.2)
@@ -446,7 +464,7 @@ class GraphicsProgram3D:
 
         #GREEN DIAMOND
         if "Green" not in self.diamonds:
-            self.shader.set_solid_color(0.2,1,0.08)
+            self.shader.set_material_diffuse(0.2,1,0.08)
             self.model_matrix.push_matrix()
             self.model_matrix.add_translation(2.3,0,-5.2)
             self.model_matrix.add_scale(0.2,0.2,0.2)
@@ -456,7 +474,7 @@ class GraphicsProgram3D:
 
         #RED DIAMOND
         if "Red" not in self.diamonds:
-            self.shader.set_solid_color(255,0,0)
+            self.shader.set_material_diffuse(255,0,0)
             self.model_matrix.push_matrix()
             self.model_matrix.add_translation(0,0,-10.6)
             self.model_matrix.add_scale(0.2,0.2,0.2)
@@ -466,7 +484,7 @@ class GraphicsProgram3D:
 
         #BLACK DIAMOND
         if "Black" not in self.diamonds:
-            self.shader.set_solid_color(0,0.0,0)
+            self.shader.set_material_diffuse(0,0.0,0)
             self.model_matrix.push_matrix()
             self.model_matrix.add_translation(-2,0,-15.3)
             self.model_matrix.add_scale(0.2,0.2,0.2)
@@ -474,7 +492,7 @@ class GraphicsProgram3D:
             self.diamond.draw(self.shader)
             self.model_matrix.pop_matrix()
 
-        self.shader.set_solid_color(1.0,0.0,1.0)
+        self.shader.set_material_diffuse(1.0,0.0,1.0)
         
 
 
@@ -518,7 +536,7 @@ class GraphicsProgram3D:
         self.model_matrix.pop_matrix()
 
         ##WINNING PLATFORM
-        self.shader.set_solid_color(0,1,0)
+        self.shader.set_material_diffuse(0,1,0)
         self.model_matrix.push_matrix()
         self.model_matrix.add_translation(-6,-0.45,-17)
         self.model_matrix.add_scale(2,0.1,2)
@@ -534,7 +552,7 @@ class GraphicsProgram3D:
         self.cube.draw(self.shader)
         self.model_matrix.pop_matrix()
 
-        self.shader.set_solid_color(1.0,0.0,1.0)
+        self.shader.set_material_diffuse(1.0,0.0,1.0)
         #END OF BASE OF MAZE
 
 
@@ -550,7 +568,7 @@ class GraphicsProgram3D:
             self.cube.draw(self.shader)
             self.model_matrix.pop_matrix()
 
-        self.shader.set_solid_color(1,1,0)
+        self.shader.set_material_diffuse(1,1,0)
         self.model_matrix.push_matrix()
         self.model_matrix.add_translation(-7,-0.45,-17)
         self.model_matrix.add_rotate_z(90*pi/180)
@@ -558,6 +576,24 @@ class GraphicsProgram3D:
         self.shader.set_model_matrix(self.model_matrix.matrix)
         self.cube.draw(self.shader)
         self.model_matrix.pop_matrix()
+
+
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        gluOrtho2D(0,800,0,600)
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
+
+        # draw all the overlay stuff
+        #self.draw_hud()
+
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+        glPopMatrix()
+
        
 
         pygame.display.flip()
@@ -619,9 +655,12 @@ class GraphicsProgram3D:
 
                     if event.key == K_e:
                         self.e_key_down = False
+
             
             self.update()
             self.display()
+            self.car()
+            
 
         #OUT OF GAME LOOP
         pygame.quit()

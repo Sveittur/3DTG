@@ -4,7 +4,6 @@ import random
 from random import *
 from sys import _xoptions
 import numpy as np
-import pywavefront
 try:
     try:
         from OpenGL.GL import * # this fails in <=2020 versions of Python on OS X 11.x
@@ -135,23 +134,21 @@ class Cube:
         glDrawArrays(GL_TRIANGLE_FAN, 16, 4)
         glDrawArrays(GL_TRIANGLE_FAN, 20, 4)
 
-class Coin:
-    def __init__(self, pos,norm):
-        self.position_array = [y for x in pos for y in x]
-        self.normal_array = [y for x in norm for y in x]
 
-
-    def draw(self, shader):
-        print(self.position_array)
-        shader.set_position_attribute(self.position_array)
-        shader.set_normal_attribute(self.normal_array)
-
-        for i in range(0,len(self.position_array),3):
-            glDrawArrays(GL_TRIANGLES,i,3)
-        
             
        
+class Color:
+    def __init__(self, r, g, b):
+        self.r = r
+        self.g = g
+        self.b = b
 
+
+class Material:
+    def __init__(self, diffuse = None, specular = None, shininess = None):
+        self.diffuse = Color(0.0, 0.0, 0.0) if diffuse is None else diffuse
+        self.specular = Color(0.0, 0.0, 0.0) if specular is None else specular
+        self.shininess = 1 if shininess is None else shininess
         
         
 
@@ -196,26 +193,6 @@ class MeshModel:
             glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
-
-
-class coin():
-    def __init__(self,buffer,indices):
-        self.buffer = buffer
-        self.indicies = indices
-
-    def draw(self,vao,vbo):
-
-        glBindVertexArray(vao[0])
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[0])
-        glBufferData(GL_ARRAY_BUFFER,self.buffer.nbytes,self.buffer,GL_STATIC_DRAW)
-
-        
-        glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,self.buffer.itemsize * 8, ctypes.c_void_p(0))
-
-        glEnableVertexAttribArray(1)
-        glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,self.buffer.itemsize * 8, ctypes.c_void_p(20))
-        glDrawArrays(GL_TRIANGLES,0,len(self.indicies))
 
 
 
